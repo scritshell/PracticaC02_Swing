@@ -75,6 +75,7 @@ public class VentanaPrincipal extends JFrame {
                 new ImageIcon(getClass().getResource("/recursos/eliminar.png")));
 
         getRootPane().setDefaultButton(pisoAlta);
+        
 
         this.setJMenuBar(barra);
 
