@@ -76,7 +76,6 @@ public class VentanaPrincipal extends JFrame {
 
         getRootPane().setDefaultButton(pisoAlta);
         
-
         this.setJMenuBar(barra);
 
 
