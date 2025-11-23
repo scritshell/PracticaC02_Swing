@@ -21,7 +21,9 @@ public class PanelJDialog extends JDialog {
     // ======================================================= //
     //   Declaración de todos los componentes del formulario   //
     // ======================================================= //
-
+	
+	
+	// -> PANEL 1: CABECERA <- //
     // Campos de texto //
     private JTextField direccion;
 
@@ -89,13 +91,9 @@ public class PanelJDialog extends JDialog {
         // ======================================================= //
 
         JPanel panelPrincipal = new JPanel();
-
-        // GridLayout con 2 columnas -> etiqueta / componente //
-        // "0" filas significa que Swing calculará las filas que hagan falta //
         panelPrincipal.setLayout(new GridLayout(0, 2, 10, 10));
-
-        // Bordes alrededor del formulario //
         panelPrincipal.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panelPrincipal.setPreferredSize(new Dimension(900, 1200));
 
         // ======================================================= //
         // 3. Inicialización de los componentes					  //
@@ -103,6 +101,8 @@ public class PanelJDialog extends JDialog {
 
         // Campo de texto para Dirección //
         direccion = new JTextField(20);
+        direccion.setMaximumSize(new Dimension(300, 30));
+
 
         // JComboBox con todas las provincias de España (50 provincias) //
         provincia = new JComboBox<>(new String[]{
@@ -115,6 +115,8 @@ public class PanelJDialog extends JDialog {
                 "Sevilla","Soria","Tarragona","Teruel","Toledo","Valencia","Valladolid",
                 "Vizcaya","Zamora","Zaragoza"
         });
+        provincia.setMaximumSize(new Dimension(300, 30));
+
 
         // Las fechas se manejan como JSpinner simples //
         fechaAlta = new JSpinner(new SpinnerDateModel());
@@ -149,12 +151,19 @@ public class PanelJDialog extends JDialog {
      	// -> Mínimo 1 cama, máximo 4
      	// -> Incremento de 1
 
-        // ======================================================= //
-        // 4. Panel para TIPOS DE CAMA							  //
-        // ======================================================= //
+     	
+     	// ======================================================= //
+     	// 4. Panel para TIPOS DE CAMA							   //
+     	// ======================================================= //
+     	
+     	panelTiposCamas = new JPanel(new GridLayout(4, 2, 10, 10));
 
-        panelTiposCamas = new JPanel(new GridLayout(4, 2, 5, 5));
-        panelTiposCamas.setBorder(BorderFactory.createTitledBorder("Tipos de cama"));
+        // Eliminamos el borde (setBorder) para no restar espacio y que no se vean aplastados //
+        // Al no tener borde, se aprovecha toda la altura disponible para los combos y etiquetas //
+        panelTiposCamas.setBorder(null);
+
+        // Establecemos una dimensión suficiente para alojar las 4 filas sin problemas //
+        panelTiposCamas.setPreferredSize(new Dimension(400, 200));
 
         // Array de 4 JComboBox (uno por cada posible cama) //
         tiposCama = new JComboBox[4];
@@ -165,16 +174,19 @@ public class PanelJDialog extends JDialog {
         // número de la cama (Cama 1, Cama 2...).				   //
         // Crea un JComboBox que permitirá al usuario seleccionar  //
         // el tipo de cama que desea.							   //
-        // Añade ambos componentes al panel.					   //
+        // Añade ambos componentes al panel usando GridLayout.     //
         // De esta forma se evita repetir código y queda mucho	   //
-        // más limpio.											   //
+        // más limpio y alineado.								   //
         // ======================================================= //
         for (int i = 0; i < 4; i++) {
-            panelTiposCamas.add(new JLabel("Cama " + (i + 1) + ":"));
+            // Crear y añadir la etiqueta
+            JLabel etiquetaCama = new JLabel("Cama " + (i + 1) + ":");
+            panelTiposCamas.add(etiquetaCama);
+             
+            // Crear y añadir el ComboBox
             tiposCama[i] = new JComboBox<>(new String[]{"Simple", "Doble", "Sofá cama"});
             panelTiposCamas.add(tiposCama[i]);
-        }
-
+         	}
         // ======================================================= //
         // 5. Panel de NIÑOS									   //
         // ======================================================= //
@@ -182,6 +194,8 @@ public class PanelJDialog extends JDialog {
         ninios = new JCheckBox("¿Niños?");
         panelExtrasNinios = new JPanel(new GridLayout(2, 2, 5, 5));
         panelExtrasNinios.setBorder(BorderFactory.createTitledBorder("Extras niños"));
+
+        panelExtrasNinios.setMaximumSize(new Dimension(400, 180));
 
         edadNinio = new JSpinner(new SpinnerNumberModel(0, 0, 10, 1));
         extras = new JTextArea(3, 15);
@@ -198,6 +212,7 @@ public class PanelJDialog extends JDialog {
 
         panelImagenes = new JPanel(new GridLayout(1, 3, 10, 10));
         panelImagenes.setBorder(BorderFactory.createTitledBorder("Imágenes del piso"));
+        panelImagenes.setMaximumSize(new Dimension(600, 150));
 
         imagen1 = new JLabel("Imagen 1", SwingConstants.CENTER);
         imagen2 = new JLabel("Imagen 2", SwingConstants.CENTER);
@@ -213,6 +228,7 @@ public class PanelJDialog extends JDialog {
 
         precioMinimo = new JTextField("0 €");
         precioMinimo.setEditable(false);
+        precioMinimo.setMaximumSize(new Dimension(300, 30));
 
         // ======================================================= //
         // 8. Añadir todos los componentes al panel principal	   //
@@ -242,8 +258,9 @@ public class PanelJDialog extends JDialog {
         panelPrincipal.add(new JLabel("Nº camas:"));
         panelPrincipal.add(camas);
 
+        panelPrincipal.add(new JLabel("Tipos de cama: ")); 
         panelPrincipal.add(panelTiposCamas);
-        panelPrincipal.add(new JLabel("")); // espacio vacío
+
 
         panelPrincipal.add(ninios);
         panelPrincipal.add(panelExtrasNinios);
@@ -265,7 +282,7 @@ public class PanelJDialog extends JDialog {
         panelBotones.add(btnAceptar);
         panelBotones.add(btnCancelar);
 
-        // Botón Cancelar → simplemente cierra el diálogo
+        // Botón Cancelar -> cierra el diálogo
         btnCancelar.addActionListener(e -> dispose());
 
         // ======================================================= //
@@ -276,6 +293,6 @@ public class PanelJDialog extends JDialog {
         add(panelBotones, BorderLayout.SOUTH);
 
         // Mostrar la ventana //
-        setVisible(false);
+        setVisible(true);
     }
 }
