@@ -2,14 +2,14 @@
 * Proyecto: swing_c_p02_CsibiSebastian
 * Paquete: swing_c_p02_CsibiSebastian
 * Archivo: VentanaPrincipal.java
-* Autor/a: Tu Nombre y Apellidos
+* Autor/a: Sebastian Csibi
 * Fecha: 21 nov 2025 8:32:46
 *
 * Descripción:
 * [Ventana principal de la aplicación con menús y botones.]
 *
 * Licencia:
-* [Todos los derechos reservados]
+* [Todos los derechos reservados.]
 */
 package swing_c_p02_CsibiSebastian;
 
@@ -19,7 +19,6 @@ import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -40,7 +39,6 @@ public class VentanaPrincipal extends JFrame {
 
     private JButton pisoAlta;
     private JButton pisoBaja;
-
     private JMenuBar barra;
     private JMenu menuArchivo, menuRegistro, menuAyuda;
     private JMenuItem itemAlta, itemBaja, itemSalir, itemAcerca;
@@ -48,16 +46,20 @@ public class VentanaPrincipal extends JFrame {
     
     // Constructor //
     public VentanaPrincipal() {
-
+    	// Nombre de la ventana //
         super("Gestión Apartamentos Turísticos Bolivianos");
 
+        
         // Cerrar aplicación al salir //
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        
         // Icono de la ventana //
         setIconImage(Toolkit.getDefaultToolkit().getImage(
                 getClass().getResource("/recursos/icono.png")));
 
+        
+        
         // ======================================================= //
         // BARRA DE MENÚS										   //
         // ======================================================= //
@@ -70,7 +72,7 @@ public class VentanaPrincipal extends JFrame {
         // Configuración de Mnemonic para el menú //
         menuArchivo.setMnemonic(KeyEvent.VK_A); // Alt + A
         menuRegistro.setMnemonic(KeyEvent.VK_R); // Alt + R
-        menuAyuda.setMnemonic(KeyEvent.VK_Y); // Alt + Y
+        menuAyuda.setMnemonic(KeyEvent.VK_H); // Alt + H
 
         barra.add(menuArchivo);
         barra.add(menuRegistro);
@@ -102,28 +104,27 @@ public class VentanaPrincipal extends JFrame {
 
         // Poner la barra //
         this.setJMenuBar(barra);
+        
+        
 
         // ======================================================= //
         // BOTONES PRINCIPALES DE LA VENTANA					   //
         // ======================================================= //
         
-        // -------- Icono NUEVO -------- //
+        // Icono NUEVO //
         ImageIcon iconoNuevo = new ImageIcon(getClass().getResource("/recursos/nuevo.png"));
         Image imgNuevo = iconoNuevo.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
         ImageIcon iconoNuevoEscalado = new ImageIcon(imgNuevo);
-
-        // -------- Icono ELIMINAR -------- //
+        
+        // Icono ELIMINAR //
         ImageIcon iconoEliminar = new ImageIcon(getClass().getResource("/recursos/eliminar.png"));
         Image imgEliminar = iconoEliminar.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
         ImageIcon iconoEliminarEscalado = new ImageIcon(imgEliminar);
-        
-        
         pisoAlta = new JButton("Alta Pisos", iconoNuevoEscalado);
-
         pisoBaja = new JButton("Baja Pisos", iconoEliminarEscalado);
         
         
-        // Configuracion Mnemonic para los botones
+        // Configuracion Mnemonic para los botones //
         pisoAlta.setMnemonic(KeyEvent.VK_A); // Alt + A
         pisoBaja.setMnemonic(KeyEvent.VK_B); // Alt + B
 
@@ -141,7 +142,6 @@ public class VentanaPrincipal extends JFrame {
         panelBotones.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 20));
         panelBotones.add(pisoAlta);
         panelBotones.add(pisoBaja);
-
         add(panelBotones, BorderLayout.CENTER);
 
         // BOTÓN POR DEFECTO -> ENTER ejecuta "Alta Pisos" //
@@ -169,23 +169,20 @@ public class VentanaPrincipal extends JFrame {
                         JOptionPane.INFORMATION_MESSAGE));
 
         // Salir de la aplicación //
-        itemSalir.addActionListener(e -> System.exit(0));
+        itemSalir.addActionListener(e -> 
+        		System.exit(0));
+        
 
         // Acerca de //
         itemAcerca.addActionListener(e ->
-                JOptionPane.showMessageDialog(this,
-                        "Gestión Apartamentos Turísticos Bolivianos\n" +
-                        "Versión: 1.0\n" +
-                        "Autor: Sebastian Csibi",
-                        "Acerca de",
-                        JOptionPane.INFORMATION_MESSAGE));
+                JOptionPane.showMessageDialog(this, "Gestión Apartamentos Turísticos Bolivianos\n Versión: 1.0\n Autor: Sebastian Csibi", "Acerca de", JOptionPane.INFORMATION_MESSAGE));
 
         // ======================================================= //
         // TAMAÑO DE LA VENTANA									   //
         // ======================================================= //
         Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();
-        int ancho = pantalla.width / 2;
-        int alto = pantalla.height / 2;
+        int ancho = pantalla.width/2;
+        int alto = pantalla.height/2;
 
         this.setSize(ancho, alto);
         this.setLocationRelativeTo(null);
