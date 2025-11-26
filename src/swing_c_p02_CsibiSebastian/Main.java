@@ -2,14 +2,14 @@
 * Proyecto: swing_c_p02_CsibiSebastian
 * Paquete: swing_c_p02_CsibiSebastian
 * Archivo: Main.java
-* Autor/a: Tu Nombre y Apellidos
+* Autor/a: Sebastián Csibi
 * Fecha: 21 nov 2025 8:32:09
 *
 * Descripción:
-* [Resumen del propósito del archivo/clase.]
+* [Inicializa la Ventana principal.]
 *
 * Licencia:
-* [Condiciones de uso/licencia.]
+* [Todos los derechos reservados.]
 */
 package swing_c_p02_CsibiSebastian;
 

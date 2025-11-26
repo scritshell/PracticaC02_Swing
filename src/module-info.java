@@ -6,7 +6,7 @@
 * Fecha: 21 nov 2025 8:31:31
 *
 * Descripción:
-* [Resumen del propósito del archivo/clase.]
+* [Módulo de la clase.]
 *
 * Licencia:
 * [Condiciones de uso/licencia.]
