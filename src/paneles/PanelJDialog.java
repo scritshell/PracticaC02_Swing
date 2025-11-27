@@ -6,7 +6,7 @@
 * Fecha: 21 nov 2025 8:37:14
 *
 * Descripción:
-* [Esste es el diálogo (MODAL) para el alta de nuevos pisos. Contiene formularios solicitando datos del arrendador y del inmueble.]
+* [Este es el diálogo (MODAL) para el alta de nuevos pisos. Contiene formularios solicitando datos del arrendador y del inmueble.]
 *
 * Licencia:
 * [Todos los derechos reservados.]
@@ -15,761 +15,920 @@ package paneles;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.Calendar;
 import java.util.Date;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentListener;
-
 
 public class PanelJDialog extends JDialog {
 
     // ======================================================= //
     // Declaración de todos los componentes del formulario     //
-	// Diferenciados por tipos de panel para tener limpieza    //
-	// del código.							   //
+	// Diferenciados por tipos de panel para limpieza de	      //
+	// código.												  //
     // ======================================================= //
-	
 	
 	// -> PANEL 1: CABECERA <- //
 	private JPanel panelCabecera;
-	
+	private JLabel tituloCabecera;
 	
 	// -> PANEL 2: DATOS DEL ARRENDADOR <- //
 	private JPanel panelArrendador;
 	private JTextField nombre, apellidos, dni, telefono;
-	
+	private JLabel lblNombre, lblApellidos, lblDni, lblTelefono;
 	
 	// -> PANEL 3: DATOS DEL INMUEBLE <- //
 	private JPanel panelInmueble;
 	
     // Campos de texto //
     private JTextField direccion;
-
+    private JLabel lblDireccion;
+    // Provincia con JComboBox //
     private JComboBox<String> provincia;
-
+    private JLabel lblProvincia;
+    // Fechas con JSpinner //
     private JSpinner fechaAlta;
     private JSpinner fechaFin;
+    private JLabel lblFechaAlta, lblFechaFin;
+    // Spinners de cantidades //
     private JSpinner huespedes;
     private JSpinner dormitorios;
     private JSpinner banios;
     private JSpinner camas;
-
+    private JLabel lblHuespedes, lblDormitorios, lblBanios, lblCamas;
+    // Panel + array de JComboBox para tipos de camas //
     private JPanel panelTiposCamas;
     private JComboBox<String>[] tiposCama;
+    // Checkbox de niños + panel adicional //
     private JCheckBox ninios;
     private JPanel panelExtrasNinios;
     private JSpinner edadNinio;
     private JTextArea extras;
-
+    private JLabel lblEdadNinio, lblExtras;
+    // Panel de imágenes del piso //
     private JPanel panelImagenes;
     private JLabel imagen1, imagen2, imagen3;
-    
+    // Precio mínimo //
     private JTextField precioMinimo;
-    
+    private JLabel lblPrecioMinimo;
 	
     // -> PANEL 4: RESUMEN <- //
-    private JTabbedPane panelResumen;
+    private JTabbedPane paneResumen;
     private JPanel panelResumenArrendador, panelResumenInmueble;
     private JTextArea resumenArrendador, resumenInmueble;
-    
-    private JButton imprimir, nuevo, guardar;
+    // Botones de acción //
+    private JButton imprimir, nuevo, guardar, aceptar, cancelar;
+    // El componente adicional (un JSlider en este caso) //
     private JSlider valoracion;
+    private JLabel lblValoracion;
+
     
-    // Bordes //
+    // Bordes simplificados
     private final Border BORDE_DEFECTO = UIManager.getBorder("TextField.border");
     private final Border BORDE_ROJO = BorderFactory.createLineBorder(Color.RED, 2);
-
 
     // ======================================================= //
     //                       CONSTRUCTOR                       //
     // ======================================================= //
 
     public PanelJDialog(Frame owner) {
-    	// ======================================================== //
-    	// super(Frame owner, String title, boolean modal)		//
+    		// ========================================================= //
+    		// super(Frame owner, String title, boolean modal)			//
         // Llamamos al constructor con parametro "Frame owner"		//
-        // owner -> la ventana que abre este diálogo			//
-        // "Alta Pisos" -> título del diálogo				//
-        // true -> modal (sirve para bloquear la ventana principal) //
-		// ======================================================== //
+        // owner -> la ventana que abre este diálogo				    //
+        // "Alta Pisos" -> título del diálogo						//
+        // true -> modal (sirve para bloquear la ventana principal)  //
+		// ========================================================= //
 
         super(owner, "Alta Pisos", true);
 
         // ======================================================= //
-        // 1. Configuración inicial de la ventana de diálogo       //
+        // 1. Configuración INICIAL de la ventana de diálogo       //
         // ======================================================= //
 
         // Obtenemos el tamaño de la pantalla del usuario //
         Dimension tamanio = Toolkit.getDefaultToolkit().getScreenSize();
-        setIconImage(Toolkit.getDefaultToolkit().getImage(
-                getClass().getResource("/recursos/icono.png")));
-        // El diálogo ocupará toda la pantalla //
-        setSize(tamanio);
-        setResizable(false);
-
+        // NOTA: Se ha reducido el tamaño inicial para que no ocupe toda la pantalla
+        // y se ajuste mejor al contenido del formulario.
+        setSize((int)(tamanio.width * 0.9), (int)(tamanio.height * 0.85));
 
         // Centrar ventana //
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
 
         // ======================================================= //
-        // 2. Inicialización de componentes y eventos			   //
+        // 2. Inicialización de componentes					   	   //
         // ======================================================= //
         
-        // Contenedor general para el formulario. //
-        // usamos BoxLayout vertical para apilar las secciones //
-        
-        
-        JPanel panelContenedor = new JPanel();
-        panelContenedor.setMaximumSize(new Dimension(1200, Integer.MAX_VALUE));
-        panelContenedor.setLayout(new BoxLayout(panelContenedor, BoxLayout.Y_AXIS));
-        panelContenedor.setBorder(BorderFactory.createEmptyBorder(15, 15, 20, 20));
+        inicializarComponentes();
+        configurarLayout();
+        configurarEventos();
+        registrarAccelerators();
+        actualizarResumen();
+        attachResumenListener(nombre, apellidos, dni, telefono, direccion);
+        attachResumenListener(extras);
+        attachResumenListener(huespedes, dormitorios, banios, camas, edadNinio);
+        attachResumenListener(valoracion); 
+        attachResumenListener(ninios);
 
-        // ======================================================= //
-        // 3. Panel de cabecera						        //
-        // ======================================================= //
-        
+        // BOTON POR DEFECTO
+        getRootPane().setDefaultButton(aceptar);
+
+        // Mostrar la ventana //
+        setVisible(true);
+    }
+
+    // ======================================================= //
+    //                 INICIALIZAR COMPONENTES                 //
+    // ======================================================= //
+
+    private void inicializarComponentes() {
+        // Panel Cabecera //
         panelCabecera = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelCabecera.setBackground(new Color(200, 220, 235));
+        panelCabecera.setBackground(new Color(200, 220, 255));
         panelCabecera.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
-        JLabel titulo = new JLabel("Formulario de Alta Pisos - Gestión Apartamentos Turísticos Bolivianos");
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 24));
-        panelCabecera.add(titulo);
-        panelContenedor.add(panelCabecera);
+        ImageIcon icono = new ImageIcon(getClass().getResource("/recursos/icono.png"));
+
         
-        
-        // ======================================================= //
-        // 4. Panel de formulario para el arrendador		       //
-        // ======================================================= //
-        
+        tituloCabecera = new JLabel("Formulario de Alta Pisos - Gestión Apartamentos Turísticos Bolivianos", icono, JLabel.LEFT);
+        tituloCabecera.setFont(new Font("SansSerif", Font.BOLD, 24));
+        tituloCabecera.setForeground(Color.BLUE);
+        panelCabecera.add(tituloCabecera);
+
+        // Panel Arrendador //
         panelArrendador = new JPanel(new GridLayout(4, 2, 10, 10));
-        panelArrendador.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), "Datos del Arrendador"));
-        panelArrendador.setMaximumSize(new Dimension(800, 300));
-        panelArrendador.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelArrendador.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(Color.LIGHT_GRAY), 
+            "Datos del Arrendador"));
+        
+        // Inicializar componentes del arrendador //
         nombre = new JTextField(15);
         apellidos = new JTextField(15);
         dni = new JTextField(10);
         telefono = new JTextField(9);
-
         
-        // Se añaden los componentes al panel del arrendados //
-        panelArrendador.add(new JLabel("Nombre:"));
+        lblNombre = new JLabel("Nombre:");
+        lblApellidos = new JLabel("Apellidos:");
+        lblDni = new JLabel("DNI:");
+        lblTelefono = new JLabel("Teléfono:");
+        
+        // Configurar mnemonics para labels //
+        // Los mnemonics mejoran la accesibilidad (Alt + Letra) //
+        lblNombre.setDisplayedMnemonic(KeyEvent.VK_N);
+        lblNombre.setLabelFor(nombre);
+        lblApellidos.setDisplayedMnemonic(KeyEvent.VK_S); // De surname, VK_A se usa en el boton aceptar //
+        lblApellidos.setLabelFor(apellidos);
+        lblDni.setDisplayedMnemonic(KeyEvent.VK_D); 
+        lblDni.setLabelFor(dni);
+        lblTelefono.setDisplayedMnemonic(KeyEvent.VK_T);
+        lblTelefono.setLabelFor(telefono);
+        
+        // Tooltips para ayudar al usuario //s
+        nombre.setToolTipText("Introduce el nombre del arrendador (obligatorio)");
+        apellidos.setToolTipText("Introduce los apellidos del arrendador (obligatorio)");
+        dni.setToolTipText("Introduce el DNI (8 dígitos y letra), por ejemplo: 12345678A");
+        telefono.setToolTipText("Introduce el teléfono (mínimo 9 dígitos)");
+
+
+        // Guardar propiedades originales en cada componente //
+        storeOriginalProperties(nombre);
+        storeOriginalProperties(apellidos);
+        storeOriginalProperties(dni);
+        storeOriginalProperties(telefono);
+
+        // Añadir componentes al panel arrendador //
+        panelArrendador.add(lblNombre);
         panelArrendador.add(nombre);
-        panelArrendador.add(new JLabel("Apellidos:"));
+        panelArrendador.add(lblApellidos);
         panelArrendador.add(apellidos);
-        panelArrendador.add(new JLabel("DNI:"));
+        panelArrendador.add(lblDni);
         panelArrendador.add(dni);
-        panelArrendador.add(new JLabel("Teléfono:"));
+        panelArrendador.add(lblTelefono);
         panelArrendador.add(telefono);
-        //\\						//\\
-        panelContenedor.add(panelArrendador);
+
+        // Panel Inmueble //
+        panelInmueble = new JPanel();
+        panelInmueble.setLayout(new BoxLayout(panelInmueble, BoxLayout.Y_AXIS));
+        panelInmueble.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(Color.LIGHT_GRAY), 
+            "Datos del Inmueble"));
         
+        // Inicializar componentes del inmueble //
+        direccion = new JTextField(20);
+        lblDireccion = new JLabel("Dirección:");
+        lblDireccion.setDisplayedMnemonic(KeyEvent.VK_Q);
+        lblDireccion.setLabelFor(direccion);
+        direccion.setToolTipText("Introduce la dirección del inmueble (obligatorio) (usar ALT + Q para la escritura)");
+        storeOriginalProperties(direccion);
         
-        // ======================================================= //
-        // 5. Inicialización de los componentes del inmueble       //
-        // ======================================================= //
-        
-        // *** APLICADO: mismo enfoque visual que en 'Datos del Arrendador' ***
-        // Reducimos la altura visual de los campos y limitamos su máximo para
-        // que el panel tenga una altura similar y no parezca descompensado.
-        
-        direccion = new JTextField(15);
-        direccion.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        
-        // JComboBox con todas las provincias de España (50 provincias) //
+        // Provincia //
         provincia = new JComboBox<>(new String[]{
-                "Álava","Albacete","Alicante","Almería","Asturias","Ávila","Badajoz",
-                "Barcelona","Burgos","Cáceres","Cádiz","Cantabria","Castellón",
-                "Ciudad Real","Córdoba","A Coruña","Cuenca","Girona","Granada",
-                "Guadalajara","Guipúzcoa","Huelva","Huesca","Islas Baleares","Jaén",
-                "León","Lleida","Lugo","Madrid","Málaga","Murcia","Navarra","Ourense",
-                "Palencia","Las Palmas","Pontevedra","La Rioja","Salamanca","Segovia",
-                "Sevilla","Soria","Tarragona","Teruel","Toledo","Valencia","Valladolid",
-                "Vizcaya","Zamora","Zaragoza"
+            "Álava","Albacete","Alicante","Almería","Asturias","Ávila","Badajoz",
+            "Barcelona","Burgos","Cáceres","Cádiz","Cantabria","Castellón",
+            "Ciudad Real","Córdoba","A Coruña","Cuenca","Girona","Granada",
+            "Guadalajara","Guipúzcoa","Huelva","Huesca","Islas Baleares","Jaén",
+            "León","Lleida","Lugo","Madrid","Málaga","Murcia","Navarra","Ourense",
+            "Palencia","Las Palmas","Pontevedra","La Rioja","Salamanca","Segovia",
+            "Sevilla","Soria","Tarragona","Teruel","Toledo","Valencia","Valladolid",
+            "Vizcaya","Zamora","Zaragoza"
         });
+        lblProvincia = new JLabel("Provincia:");
+        lblProvincia.setDisplayedMnemonic(KeyEvent.VK_P);
+        lblProvincia.setLabelFor(provincia);
+        provincia.setToolTipText("Selecciona la provincia donde se ubica el inmueble");
+
+        // Fechas //
+        Calendar calendario = Calendar.getInstance();
+        Date fechaActual = calendario.getTime();
         
-        // Limitar altura del combo para mantener uniformidad
-        provincia.setMaximumSize(new Dimension(300, 25));
-        provincia.setPreferredSize(new Dimension(300, 25));
+        calendario.add(Calendar.YEAR, 1);
+        Date fechaUnAnio = calendario.getTime();
+        
+        fechaAlta = new JSpinner(new SpinnerDateModel(fechaActual, null, null, Calendar.DAY_OF_MONTH));
+        fechaFin = new JSpinner(new SpinnerDateModel(fechaUnAnio, null, null, Calendar.DAY_OF_MONTH));
+        
+        // Formatear spinners de fecha para mostrar solo fecha (sin hora) //
+        JSpinner.DateEditor editorFechaAlta = new JSpinner.DateEditor(fechaAlta, "dd/MM/yyyy");
+        JSpinner.DateEditor editorFechaFin = new JSpinner.DateEditor(fechaFin, "dd/MM/yyyy");
+        fechaAlta.setEditor(editorFechaAlta);
+        fechaFin.setEditor(editorFechaFin);
+        
+        lblFechaAlta = new JLabel("Fecha de alta:");
+        lblFechaFin = new JLabel("Fecha final:");
 
-
-        // Las fechas se manejan como JSpinner simples //
-        fechaAlta = new JSpinner(new SpinnerDateModel());
-        fechaFin = new JSpinner(new SpinnerDateModel());
-        // Reducir la altura visual de los spinners
-        fechaAlta.setPreferredSize(new Dimension(200, 25));
-        fechaAlta.setMaximumSize(new Dimension(200, 25));
-        fechaFin.setPreferredSize(new Dimension(200, 25));
-        fechaFin.setMaximumSize(new Dimension(200, 25));
-
-        //\\ Spinners de números //\\
-        // (Cada spinner permite seleccionar un valor dentro de un rango definido) //
-
-        //\\ Spinner para el número de huéspedes //\\
-        // new SpinnerNumberModel(valorInicial, valorMinimo, valorMaximo, incremento) //
+        // Spinners numéricos //
         huespedes = new JSpinner(new SpinnerNumberModel(1, 1, 8, 1));
-        huespedes.setPreferredSize(new Dimension(80, 25));
-        huespedes.setMaximumSize(new Dimension(80, 25));
-     	// -> Empieza en 1
-     	// -> No puede bajar de 1
-     	// -> No puede subir de 8
-     	// -> Se incrementa/decrementa de 1 en 1
-
-        //\\ Spinner para el número de dormitorios //\\
-     	dormitorios = new JSpinner(new SpinnerNumberModel(1, 1, 4, 1));
-     	dormitorios.setPreferredSize(new Dimension(80, 25));
-     	dormitorios.setMaximumSize(new Dimension(80, 25));
-     	// -> Valor inicial: 1
-     	// -> Entre 1 y 4 dormitorios
-     	// -> Paso de 1
-
-     	//\\ Spinner para número de baños //\\
-     	banios = new JSpinner(new SpinnerNumberModel(1, 1, 3, 1));
-     	banios.setPreferredSize(new Dimension(80, 25));
-     	banios.setMaximumSize(new Dimension(80, 25));
-     	// -> Valor inicial: 1
-     	// -> Entre 1 y 3 baños
-     	// -> Incremento de 1
-
-     	//\\ Spinner para número de camas //\\
-     	camas = new JSpinner(new SpinnerNumberModel(1, 1, 4, 1));
-     	camas.setPreferredSize(new Dimension(80, 25));
-     	camas.setMaximumSize(new Dimension(80, 25));
-     	// -> Valor inicial: 1
-     	// -> Mínimo 1 cama, máximo 4
-     	// -> Incremento de 1
-
-     	
-     	// ======================================================= //
-     	// 6. Panel para TIPOS DE CAMA					   //
-     	// ======================================================= //
-     	
-     	panelTiposCamas = new JPanel(new GridLayout(4, 2, 10, 10));
-
-        // Eliminamos el borde (setBorder) para no restar espacio y que no se vean aplastados //
-        // Al no tener ese borde, se aprovecha toda la altura disponible para los combos y etiquetas //
-        panelTiposCamas.setBorder(null);
-
-        // Establecemos una dimensión suficiente para alojar las 4 filas sin problemas (más compacta)
-        panelTiposCamas.setPreferredSize(new Dimension(350, 120));
-        panelTiposCamas.setMaximumSize(new Dimension(350, 120)); // Limitar la altura para GridBagLayout
-
-        // Array de 4 JComboBox (uno por cada posible cama) //
-        tiposCama = new JComboBox[4];
-
-        // Hago un bucle para crear las 4 etiquetas y ComboBoxes de camas //
-        for (int i = 0; i < 4; i++) {
-        	JLabel etiquetaCama = new JLabel("Cama " + (i + 1) + ":");
-        	panelTiposCamas.add(etiquetaCama);
-        	tiposCama[i] = new JComboBox<>(new String[]{"Simple", "Doble", "Sofá cama"});
-        	// Limitar altura de cada combo para consistencia visual
-        	tiposCama[i].setPreferredSize(new Dimension(150, 25));
-        	tiposCama[i].setMaximumSize(new Dimension(150, 25));
-        	panelTiposCamas.add(tiposCama[i]);
-        };
-        // ======================================================= //
-        // 7. Panel de niños						   //
-        // ======================================================= //
+        dormitorios = new JSpinner(new SpinnerNumberModel(1, 1, 4, 1));
+        banios = new JSpinner(new SpinnerNumberModel(1, 1, 3, 1));
+        camas = new JSpinner(new SpinnerNumberModel(1, 1, 4, 1));
         
+        lblHuespedes = new JLabel("Nº huéspedes:");
+        lblDormitorios = new JLabel("Nº dormitorios:");
+        lblBanios = new JLabel("Nº baños:");
+        lblCamas = new JLabel("Nº camas:");
+
+        // Panel tipos de camas //
+        panelTiposCamas = new JPanel(new GridLayout(4, 2, 10, 10));
+        panelTiposCamas.setBorder(BorderFactory.createTitledBorder("Tipos de cama"));
+        tiposCama = new JComboBox[4];
+        
+        for (int i = 0; i < 4; i++) {
+            JLabel etiquetaCama = new JLabel("Cama " + (i + 1) + ":");
+            tiposCama[i] = new JComboBox<>(new String[]{"Cama simple", "Cama doble", "Sofá cama"});
+            tiposCama[i].setEnabled(i == 0); // Solo la primera habilitada inicialmente
+            panelTiposCamas.add(etiquetaCama);
+            panelTiposCamas.add(tiposCama[i]);
+        }
+
+        // Panel niños //
         ninios = new JCheckBox("¿Niños?");
         panelExtrasNinios = new JPanel(new GridLayout(2, 2, 5, 5));
-        panelExtrasNinios.setEnabled(false); // Por defecto, se deshabilitan las opciones debido a que la casilla por defecto está desactivada //
         panelExtrasNinios.setBorder(BorderFactory.createTitledBorder("Extras niños"));
-        panelExtrasNinios.setMaximumSize(new Dimension(400, 120));
-
+        // El estado de los componentes internos debe ser manejado por el evento del JCheckBox
+        
         edadNinio = new JSpinner(new SpinnerNumberModel(0, 0, 10, 1));
-    	edadNinio.setEnabled(false); // Lo mismo para la edad de los niños //
         extras = new JTextArea(3, 15);
-    	extras.setEnabled(false); // Lo mismo para los extras //
+        extras.setLineWrap(true);
+        extras.setEditable(false); // Bloquear edición por el usuario
 
-
-        panelExtrasNinios.add(new JLabel("Edad niño:"));
+        
+        lblEdadNinio = new JLabel("Edad niño:");
+        lblExtras = new JLabel("Extras:");
+        
+        panelExtrasNinios.add(lblEdadNinio);
         panelExtrasNinios.add(edadNinio);
-
-        panelExtrasNinios.add(new JLabel("Extras:"));
+        panelExtrasNinios.add(lblExtras);
         panelExtrasNinios.add(new JScrollPane(extras));
-        // Lógica para activar/desactivar el panel "Extras" //
-        ninios.addActionListener(e -> {
-        	boolean elegido = ninios.isSelected(); // creamos boolean que cambia true o false dependiendo de si está elegido o no la casilla de "Niños?" //
-        	panelExtrasNinios.setEnabled(elegido); // Pasamos como parámetro el booleano creado al setEnable() para que el panel se active o desactive 
-        	edadNinio.setEnabled(elegido); // Lo mismo para la edad de los niños //
-        	extras.setEnabled(elegido); // Lo mismo para "Extras" //
-        });
+        
+        // Inicialmente deshabilitado //
+        setPanelExtrasNiniosEnabled(false);
+        
+        // Más tooltips //
+        fechaAlta.setToolTipText("Selecciona la fecha de alta (por defecto, hoy)");
+        fechaFin.setToolTipText("Selecciona la fecha final del contrato");
+        storeOriginalProperties(fechaAlta);
+        storeOriginalProperties(fechaFin);
+        huespedes.setToolTipText("Número máximo de huéspedes permitidos");
+        dormitorios.setToolTipText("Número de dormitorios del inmueble");
+        banios.setToolTipText("Número de baños (influye en el precio mínimo)");
+        camas.setToolTipText("Número total de camas disponibles");
+        storeOriginalProperties(huespedes);
+        storeOriginalProperties(dormitorios);
+        storeOriginalProperties(banios);
+        storeOriginalProperties(camas);
+        for (int i = 0; i < tiposCama.length; i++) {
+            tiposCama[i].setToolTipText("Selecciona el tipo de la cama " + (i + 1));
+            storeOriginalProperties(tiposCama[i]);
+        }
+        ninios.setToolTipText("Marca si hay niños (activará opciones adicionales)");
+        storeOriginalProperties(ninios);
+        edadNinio.setToolTipText("Edad del niño (0 a 10 años). Controla el tipo de cama: cuna o supletoria");
+        extras.setToolTipText("Se rellenará automáticamente según la edad (cuna o cama supletoria)");
+        storeOriginalProperties(edadNinio);
+        storeOriginalProperties(extras);
 
-        // ======================================================= //
-        // 8. Panel de IMÁGENES					   //
-        // ======================================================= //
-
+        // Panel imágenes //
         panelImagenes = new JPanel(new GridLayout(1, 3, 10, 10));
         panelImagenes.setBorder(BorderFactory.createTitledBorder("Imágenes del piso"));
-        panelImagenes.setMaximumSize(new Dimension(600, 120));
-
-        imagen1 = new JLabel("Imagen 1", SwingConstants.CENTER);
-        imagen2 = new JLabel("Imagen 2", SwingConstants.CENTER);
-        imagen3 = new JLabel("Imagen 3", SwingConstants.CENTER);
-
-        // Usamos try-catch por si no cargan las imagenes, una buena práctica para manejo de errores //
-        try {
-            imagen1.setIcon(new ImageIcon(getClass().getResource("/recursos/img1.png")));
-            imagen2.setIcon(new ImageIcon(getClass().getResource("/recursos/img2.png")));
-            imagen3.setIcon(new ImageIcon(getClass().getResource("/recursos/img3.png")));
-        } catch (Exception m) {
-            System.err.println("No se pudieron cargar los recursos de imágenes. " + m.getMessage());
-        }
         
-        // Ajustar etiquetas para mostrar texto e imagen //
-        imagen1.setHorizontalTextPosition(SwingConstants.CENTER);
-        imagen1.setVerticalTextPosition(SwingConstants.BOTTOM);
-        imagen2.setHorizontalTextPosition(SwingConstants.CENTER);
-        imagen2.setVerticalTextPosition(SwingConstants.BOTTOM);
-        imagen3.setHorizontalTextPosition(SwingConstants.CENTER);
-        imagen3.setVerticalTextPosition(SwingConstants.BOTTOM);
-
-
+ 
+        imagen1 = new JLabel(new ImageIcon(getClass().getResource("/recursos/img1.png")), SwingConstants.CENTER);
+        imagen2 = new JLabel(new ImageIcon(getClass().getResource("/recursos/img2.png")), SwingConstants.CENTER);
+        imagen3 = new JLabel(new ImageIcon(getClass().getResource("/recursos/img3.png")), SwingConstants.CENTER);
+        
+        imagen1.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        imagen2.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        imagen3.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        
         panelImagenes.add(imagen1);
         panelImagenes.add(imagen2);
         panelImagenes.add(imagen3);
 
-        // ======================================================= //
-        // 9. Precio mínimo (sin lógica)				   //
-        // ======================================================= //
-
+        // Precio mínimo //
         precioMinimo = new JTextField("0 €");
         precioMinimo.setEditable(false);
-        precioMinimo.setMaximumSize(new Dimension(300, 25));
+        lblPrecioMinimo = new JLabel("Precio Mínimo:");
+        precioMinimo.setToolTipText("Precio mínimo calculado automáticamente");
+        
+        imagen1.setToolTipText("Vista previa 1 del inmueble");
+        imagen2.setToolTipText("Vista previa 2 del inmueble");
+        imagen3.setToolTipText("Vista previa 3 del inmueble");
+        precioMinimo.setToolTipText("Precio mínimo del inmueble según camas, baños y extras");
+        storeOriginalProperties(precioMinimo);
 
-        // ======================================================= //
-        // 10. Añadir todos los componentes al panel inmueble	   //
-        // ======================================================= //
+        // Panel Resumen (JTabbedPane) //
+        paneResumen = new JTabbedPane();
+        paneResumen.setPreferredSize(new Dimension(400, 150));
         
-        // MODIFICACIÓN A GridBagLayout para evitar el estiramiento vertical //
-        panelInmueble = new JPanel(new GridBagLayout()); 
-        panelInmueble.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), "Datos del inmueble"));
-        // Aplicado: limitar altura máxima como en panelArrendador para homogeneidad
-        panelInmueble.setMaximumSize(new Dimension(800, 600)); // Aumentado ligeramente para acomodar todos los campos
-        panelInmueble.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5); // Márgenes entre componentes
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        
-        int fila = 0;
-
-        // Fila 1: Dirección
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Dirección:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(direccion, gbc);
-        fila++;
-
-        // Fila 2: Provincia
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Provincia:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(provincia, gbc);
-        fila++;
-
-        // Fila 3: Fecha alta
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Fecha alta:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(fechaAlta, gbc);
-        fila++;
-
-        // Fila 4: Fecha fin
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Fecha fin:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(fechaFin, gbc);
-        fila++;
-        
-        // Fila 5: Nº huéspedes
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Nº huéspedes:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(huespedes, gbc);
-        fila++;
-        
-        // Fila 6: Nº dormitorios
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Nº dormitorios:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(dormitorios, gbc);
-        fila++;
-        
-        // Fila 7: Nº baños
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Nº baños:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(banios, gbc);
-        fila++;
-        
-        // Fila 8: Nº camas
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Nº camas:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; 
-        panelInmueble.add(camas, gbc);
-        fila++;
-        
-        // Fila 9: Tipos de cama (ocupará dos columnas)
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.NORTHWEST;
-        panelInmueble.add(new JLabel("Tipos de cama: "), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.BOTH;
-        panelInmueble.add(panelTiposCamas, gbc);
-        fila++;
-
-        // Fila 10: ¿Niños? y Panel de Extras
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.NONE;
-        panelInmueble.add(ninios, gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
-        panelInmueble.add(panelExtrasNinios, gbc);
-        fila++;
-        
-        // Fila 11: Panel de Imágenes (ocupará dos columnas)
-        gbc.gridx = 0; gbc.gridy = fila; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
-        panelInmueble.add(panelImagenes, gbc);
-        gbc.gridwidth = 1; // Resetear gridwidth
-        fila++;
-        
-        // Fila 12: Precio Mínimo
-        gbc.gridx = 0; gbc.gridy = fila; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.WEST;
-        panelInmueble.add(new JLabel("Precio mínimo:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
-        panelInmueble.add(precioMinimo, gbc);
-        fila++;
-        
-        // Espacio vacío para empujar los elementos hacia arriba y evitar estiramiento total (si fuera necesario, aquí no lo es tanto)
-        // gbc.gridx = 0; gbc.gridy = fila; gbc.weighty = 1.0; panelInmueble.add(new JLabel(""), gbc);
-        
-        panelContenedor.add(panelInmueble);
-
-        // ======================================================= //
-        // 11. Panel de resumen y sus acciones			   //
-        // ======================================================= //
-        
-     // Tabbed Pane para el Resumen (Arrendador e Inmueble)
-        panelResumen = new JTabbedPane();
-        panelResumen.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panelResumen.setPreferredSize(new Dimension(400, 200));
-        
-        // Resumen del arrendador //
         panelResumenArrendador = new JPanel(new BorderLayout());
-        resumenArrendador = new JTextArea("");
+        panelResumenInmueble = new JPanel(new BorderLayout());
+        
+        resumenArrendador = new JTextArea(8, 30);
+        resumenInmueble = new JTextArea(8, 30);
         resumenArrendador.setEditable(false);
-        panelResumenArrendador.add(new JScrollPane(resumenArrendador), BorderLayout.CENTER);
-        panelResumen.addTab("Arrendador", panelResumenArrendador);
-
-        // Resumen del inmueble //
-        panelResumenInmueble = new JPanel(new BorderLayout()); // Inicialización del panel de resumen de inmueble // 
-        resumenInmueble = new JTextArea(""); // Inicialización del área de texto // 
         resumenInmueble.setEditable(false);
+        
+        panelResumenArrendador.add(new JScrollPane(resumenArrendador), BorderLayout.CENTER);
         panelResumenInmueble.add(new JScrollPane(resumenInmueble), BorderLayout.CENTER);
-        panelResumen.addTab("Inmueble", panelResumenInmueble); // Se añade la pestaña // 
-
-        // Valoracion //
-        valoracion = new JSlider(0, 5);
-        valoracion.setMajorTickSpacing(1);
-        valoracion.setPaintTicks(true);
-        valoracion.setPaintLabels(true);
-
-        JPanel panelValoracion = new JPanel(new BorderLayout());
-        panelValoracion.add(new JLabel("Valoración del Piso (0-5):", SwingConstants.CENTER), BorderLayout.NORTH);
-        panelValoracion.add(valoracion, BorderLayout.CENTER);
-
-        // Panel que combina el TabbedPane y el Slider //
-        JPanel panelResumenYValoracion = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        panelResumenYValoracion.add(panelResumen);
-        panelResumenYValoracion.add(panelValoracion);
-        panelContenedor.add(panelResumenYValoracion);
         
-        // ============================= //
-        // Botones de acción del diálogo //
-        // ============================= //
+        paneResumen.addTab("Arrendador", panelResumenArrendador);
+        paneResumen.addTab("Inmueble", panelResumenInmueble);
         
+        resumenArrendador.setToolTipText("Resumen automático de los datos del arrendador");
+        resumenInmueble.setToolTipText("Resumen automático de los datos del inmueble");
+        storeOriginalProperties(resumenArrendador);
+        storeOriginalProperties(resumenInmueble);
+
+        // Botones de acción //
         imprimir = new JButton("Imprimir");
         nuevo = new JButton("Nuevo");
         guardar = new JButton("Guardar");
-
-        // El botón guardar es el botón por defecto del diálogo //
-        getRootPane().setDefaultButton(guardar);
-
-        JPanel panelAcciones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        panelAcciones.add(imprimir);
-        panelAcciones.add(nuevo);
-        panelAcciones.add(guardar);
-
-
-        // ========================== //
-        // Botones Aceptar / Cancelar //
-        // ========================== //
-        JButton btnAceptar = new JButton("Aceptar"); // Mantener para completar la funcionalidad del constructor //
-        JButton btnCancelar = new JButton("Cancelar");
-
-        JPanel panelBotonesControl = new JPanel();
-        panelBotonesControl.add(btnAceptar);
-        panelBotonesControl.add(btnCancelar);
-
-        // Botón Cancelar -> cierra el diálogo //
-        btnCancelar.addActionListener(e -> dispose());
-
-
-        // Panel inferior que une los botones de acción con los de control //
-        JPanel panelInferiorTotal = new JPanel(new BorderLayout());
-        panelInferiorTotal.add(panelAcciones, BorderLayout.NORTH);
-        panelInferiorTotal.add(panelBotonesControl, BorderLayout.SOUTH);
-
-        // ======================================================= //
-        // 12. Inicialización de la lógica del formulario          //
-        // ======================================================= //
+        aceptar = new JButton("Aceptar");
+        cancelar = new JButton("Cancelar");
         
-        // Inicializar el precio y la visibilidad de combos de cama //
-        calcularPrecio();
-        // Ajustar la visibilidad inicial de los tipos de cama //
-        int initialCamas = (int) camas.getValue();
-        for (int i = 0; i < tiposCama.length; i++) {
-            boolean enabled = i < initialCamas;
-            tiposCama[i].setEnabled(enabled);
-            // La etiqueta es el componente justo antes del ComboBox en el GridLayout del panelTiposCamas //
-            if (i * 2 < panelTiposCamas.getComponentCount()) {
-                panelTiposCamas.getComponent(i * 2).setEnabled(enabled);
-            }
+        // Configurar mnemonics para botones
+        imprimir.setMnemonic(KeyEvent.VK_I);
+        nuevo.setMnemonic(KeyEvent.VK_N);
+        guardar.setMnemonic(KeyEvent.VK_G);
+        aceptar.setMnemonic(KeyEvent.VK_A);
+        cancelar.setMnemonic(KeyEvent.VK_C);
+
+        // Tooltips para botones (ayuda rápida) //
+        imprimir.setToolTipText("Imprimir formulario (Ctrl+I)");
+        nuevo.setToolTipText("Limpiar formulario para un nuevo registro (Ctrl+N)");
+        guardar.setToolTipText("Guardar los datos (Ctrl+G)");
+        aceptar.setToolTipText("Aceptar y cerrar (Ctrl+A)");
+        cancelar.setToolTipText("Cancelar y cerrar (Ctrl+C)");
+        
+        // Componente adicional: JSlider //
+        valoracion = new JSlider(0, 10, 5);
+        valoracion.setMajorTickSpacing(2);
+        valoracion.setMinorTickSpacing(1);
+        valoracion.setPaintTicks(true);
+        valoracion.setPaintLabels(true);
+        valoracion.setToolTipText("Valoración general del inmueble (0-10)");
+        lblValoracion = new JLabel("Valoración:");
+    }
+    
+    // Método auxiliar para habilitar/deshabilitar el panelExtrasNinios //
+    private void setPanelExtrasNiniosEnabled(boolean activo) {
+        panelExtrasNinios.setEnabled(activo);
+        for (Component componente : panelExtrasNinios.getComponents()) {
+            componente.setEnabled(activo);
         }
+    }
+
+    // Guarda propiedades originales del componente sin usar colecciones externas (IA)
+    private void storeOriginalProperties(JComponent comp) {
+        comp.putClientProperty("origBorder", comp.getBorder());
+        comp.putClientProperty("origTooltip", comp.getToolTipText());
+    }
+
+    // Pone borde rojo y tooltip de error //
+    private void mostrarError(JComponent componente, String mensaje) {
+        componente.setBorder(BORDE_ROJO);
+        componente.setToolTipText(mensaje);
+    }
+
+    // Restaura borde y tooltip originales (si se guardaron), o BORDE_DEFECTO sino (Generado con IA) //
+    private void manejorErrorBordes(JComponent comp) {
+        Object b = comp.getClientProperty("origBorder");
+        if (b instanceof Border) comp.setBorder((Border) b);
+        else comp.setBorder(BORDE_DEFECTO);
+
+        Object t = comp.getClientProperty("origTooltip");
+        if (t instanceof String) comp.setToolTipText((String) t);
+        else comp.setToolTipText(null);
+    }
+
+    // ======================================================= //
+    //                 CONFIGURAR LAYOUT                       //
+    // ======================================================= //
+
+    private void configurarLayout() {
+        // Panel principal con BorderLayout //
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Margen general
         
-        // ======================================================= //
-        // 13. Asignación de Eventos y Lógica Funcional		   //
-        // ======================================================= //
+        // Panel norte: Cabecera //
+        panelPrincipal.add(panelCabecera, BorderLayout.NORTH);
         
-        // Listener para calcular el precio //
-        ChangeListener priceChangeListener = e -> calcularPrecio();
+        // Panel centro: Formularios (Arrendador e Inmueble) //
+        JPanel panelFormularios = new JPanel();
+        // Usamos un layout manager que permita una buena distribución horizontal/vertical //
+        // Para simplificar y mantener la estructura original, usamos BoxLayout vertical para el contenido principal //
+        panelFormularios.setLayout(new BoxLayout(panelFormularios, BoxLayout.Y_AXIS)); 
+        panelFormularios.add(panelArrendador);
+        panelFormularios.add(Box.createVerticalStrut(10));
         
-        // Eventos que recalculan el precio //
-        banios.addChangeListener(priceChangeListener);
+        // Panel de Inmueble. se usa un panel intermedio para el contenido principal //
+        JPanel panelInmuebleContenido = new JPanel(new GridLayout(0, 2, 10, 10));
+        panelInmuebleContenido.add(lblDireccion);
+        panelInmuebleContenido.add(direccion);
+        panelInmuebleContenido.add(lblProvincia);
+        panelInmuebleContenido.add(provincia);
+        panelInmuebleContenido.add(lblFechaAlta);
+        panelInmuebleContenido.add(fechaAlta);
+        panelInmuebleContenido.add(lblFechaFin);
+        panelInmuebleContenido.add(fechaFin);
+        panelInmuebleContenido.add(lblHuespedes);
+        panelInmuebleContenido.add(huespedes);
+        panelInmuebleContenido.add(lblDormitorios);
+        panelInmuebleContenido.add(dormitorios);
+        panelInmuebleContenido.add(lblBanios);
+        panelInmuebleContenido.add(banios);
+        panelInmuebleContenido.add(lblCamas);
+        panelInmuebleContenido.add(camas);
         
-        // Listener especial para camas: recalcula precio y ajusta la visibilidad de los combos de tipo de cama //
-        camas.addChangeListener(e -> {
-            calcularPrecio();
-            int numCamas = (int) camas.getValue();
-            for (int i = 0; i < tiposCama.length; i++) {
-                boolean enabled = i < numCamas;
-                tiposCama[i].setEnabled(enabled);
-                // Habilitar/deshabilitar la etiqueta correspondiente //
-                if (i * 2 < panelTiposCamas.getComponentCount()) {
-                    panelTiposCamas.getComponent(i * 2).setEnabled(enabled);
-                }
-            }
+        // El panel Inmueble es el contenedor vertical de todos los subpaneles del inmueble //
+        panelInmueble.add(panelInmuebleContenido);
+        panelInmueble.add(Box.createVerticalStrut(10));
+        panelInmueble.add(panelTiposCamas);
+        panelInmueble.add(Box.createVerticalStrut(10));
+        
+        JPanel panelNinios = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelNinios.add(ninios);
+        panelInmueble.add(panelNinios);
+        panelInmueble.add(panelExtrasNinios);
+        panelInmueble.add(Box.createVerticalStrut(10));
+        panelInmueble.add(panelImagenes);
+        panelInmueble.add(Box.createVerticalStrut(10));
+        
+        JPanel panelPrecio = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelPrecio.add(lblPrecioMinimo);
+        panelPrecio.add(precioMinimo);
+        panelInmueble.add(panelPrecio);
+        
+        panelFormularios.add(panelInmueble);
+        
+        // Hacemos el panel principal de formularios desplazable, ya que el contenido es grande //
+        panelPrincipal.add(new JScrollPane(panelFormularios), BorderLayout.CENTER); 
+        
+        // Panel sur: Resumen y Botones //
+        JPanel panelSur = new JPanel(new BorderLayout(10, 10));
+
+        // Panel Resumen
+        // Se añade directamente el JTabbedPane, ya configurado con las pestañas "Arrendador" e "Inmueble" //
+        
+        // Panel de valoración //
+        JPanel panelValoracion = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.0;
+        panelValoracion.add(lblValoracion, gbc);
+        
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        panelValoracion.add(valoracion, gbc);
+
+        // Contenedor para Resumen y Valoración //
+        JPanel panelResumenYValoracion = new JPanel(new GridLayout(1, 2, 10, 0));
+        panelResumenYValoracion.add(paneResumen);
+        panelResumenYValoracion.add(panelValoracion);
+        
+        panelSur.add(panelResumenYValoracion, BorderLayout.CENTER);
+        
+        // Botones //
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelBotones.add(imprimir);
+        panelBotones.add(nuevo);
+        panelBotones.add(guardar);
+        panelBotones.add(aceptar);
+        panelBotones.add(cancelar);
+        
+        panelSur.add(panelBotones, BorderLayout.SOUTH);
+        
+        panelPrincipal.add(panelSur, BorderLayout.SOUTH);
+        
+        // Añadir panel principal al diálogo //
+        add(panelPrincipal);
+    }
+
+    // ======================================================= //
+    // CONFIGURAR EVENTOS									   //
+    // ======================================================= //
+    private void configurarEventos() {
+        // Checkbox niños habilita/deshabilita panel de extras
+        ninios.addItemListener(e -> {
+            boolean seleccionado = (e.getStateChange() == ItemEvent.SELECTED);
+            setPanelExtrasNiniosEnabled(seleccionado);
         });
         
-        // Eventos que recalculan el precio para los tipos de cama seleccionados //
-        for (JComboBox<String> combo : tiposCama) {
-            combo.addActionListener(e -> calcularPrecio());
-        }
-
-        // Añadir lógica de relleno automático de 'Extras' y recalcular precio al activar/desactivar 'Niños' //
-        ninios.addActionListener(e -> {
-            boolean elegido = ninios.isSelected();
-            // Lógica existente:
-            panelExtrasNinios.setEnabled(elegido);
-            edadNinio.setEnabled(elegido);
-            extras.setEnabled(elegido);
-            
-            if (elegido) {
-                // Relleno automático de "Cuna" si se selecciona "Niños" //
-                extras.setText("Cuna");
-            } else {
+     // Al activar/desactivar la casilla de niños: habilitar panel y limpiar si se desactiva //
+        ninios.addItemListener(e -> {
+            boolean seleccionado = (e.getStateChange() == ItemEvent.SELECTED);
+            setPanelExtrasNiniosEnabled(seleccionado);
+            if (!seleccionado) {
+                // si se desactiva, borramos el texto de extras //
                 extras.setText("");
+                // opcional: recalcular precio si dependiera //
+                recalcularPrecio();
+                actualizarResumen();
+
+            }
+        });
+
+        // Cuando el spinner de edad cambia, si el campo extras tiene foco o está vacío actualizar (Generado con IA)
+        edadNinio.addChangeListener(e -> {
+            // Si el campo extras tiene focus, o si está vacío/contiene texto automático, actualizarlo
+            if (extras.isFocusOwner() || extras.getText().trim().isEmpty()
+                    || extras.getText().trim().equalsIgnoreCase("cuna")
+                    || extras.getText().trim().equalsIgnoreCase("cama supletoria pequeña")) {
+                rellenarExtrasPorEdad();
             }
             
-            calcularPrecio();
+            recalcularPrecio();
+            actualizarResumen();
         });
-        
-        // DocumentListener para recalcular precio cuando se modifica el campo "Extras"
-        extras.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { calcularPrecio(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { calcularPrecio(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) {}
-        });
-        
-        // Lógica de botones de acción //
-        guardar.addActionListener(e -> validaciones(true)); // Guardar -> validar y mostrar éxito si esta bien //
-        nuevo.addActionListener(e -> limpiar()); // Nuevo -> limpiar formulario //
 
-        // Imprimir //
+        // Cuando el campo "extras" recibe el foco, rellenarl automáticamente //
+        extras.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                rellenarExtrasPorEdad();
+            }
+        });
+
+
+        // DocumentListeners para borar borde rojo cuando el usuario escribe //
+        addClearErrorOnEdit(nombre);
+        addClearErrorOnEdit(apellidos);
+        addClearErrorOnEdit(dni);
+        addClearErrorOnEdit(telefono);
+        addClearErrorOnEdit(direccion);
+
+        // Botones: acciones mínimas //
         imprimir.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Funcionalidad de Imprimir a Documento no implementada.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            // Acción mínima: confirmar impresión //
+            JOptionPane.showMessageDialog(this, "Enviar a imprimir.", "Imprimir", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        nuevo.addActionListener(e -> {
+            limpiarFormulario();
+        });
+
+        guardar.addActionListener(e -> {
+            if (validarFormulario()) {
+                JOptionPane.showMessageDialog(this, "Datos validados. Guardando...", "Guardar", JOptionPane.INFORMATION_MESSAGE);
+            }
         });
         
-        // Botón Aceptar -> Validar, actualizar resumen y cerrar //
-        btnAceptar.addActionListener(e -> {
-            validaciones(false); // Validar y actualizar resumen si es ok //
-            // Comprobamos si las validaciones pasaron para cerrar el diálogo //
-            // Obtenemos el campo de la fecha de alta para comprobar su borde. //
-            JTextField fechaAltaFieldTemp = ((JSpinner.DefaultEditor)fechaAlta.getEditor()).getTextField();
-            if (nombre.getBorder() == BORDE_DEFECTO && apellidos.getBorder() == BORDE_DEFECTO &&
-                dni.getBorder() == BORDE_DEFECTO && telefono.getBorder() == BORDE_DEFECTO &&
-                fechaAltaFieldTemp.getBorder() == BORDE_DEFECTO) {
+        
+        
+        // Recalcular cuando cambien los baños //
+        banios.addChangeListener(e -> {
+        recalcularPrecio();
+        actualizarResumen();
+        });
+
+        // Recalcular cuando cambie el número de camas //
+        camas.addChangeListener(e -> {
+            recalcularPrecio();
+            actualizarResumen();
+            });
+        
+
+        // Recalcular cuando cambie el tipo de cada cama //
+        for (int i = 0; i < tiposCama.length; i++) {
+            tiposCama[i].addActionListener(e -> {
+                recalcularPrecio();
+                actualizarResumen();
+                });
+        }
+
+        // Recalcular cuando se marque/desmarque la opción de niños //
+        ninios.addActionListener(e -> {
+            recalcularPrecio();
+            actualizarResumen();
+            });
+
+        aceptar.addActionListener(e -> {
+            if (validarFormulario()) {
+                // Aceptar: validar y cerrar //
+                JOptionPane.showMessageDialog(this, "Datos validados. Aceptando y cerrando.", "Aceptar", JOptionPane.INFORMATION_MESSAGE);
                 dispose();
             }
         });
 
+        cancelar.addActionListener(e -> {
+            // Confirmación antes de cerrar //
+            int resp = JOptionPane.showConfirmDialog(this, "¿Cancelar y cerrar sin guardar?", "Cancelar", JOptionPane.YES_NO_OPTION);
+            if (resp == JOptionPane.YES_OPTION) {
+                dispose();
+            }
+        });
+        
+        camas.addChangeListener(e -> {
+            int num = (int) camas.getValue();
 
-
-        // ======================================================= //
-        // 14. Añadir todo al JDialog				   //
-        // ======================================================= //
-        // El contenedor de todas las secciones se envuelve en un solo JScrollPane //
-        add(new JScrollPane(panelContenedor), BorderLayout.CENTER);
-        add(panelInferiorTotal, BorderLayout.SOUTH);
-
-        // La lógica de activación inicial: deshabilitar extras niños y poner foco //
-        for (Component componente : panelExtrasNinios.getComponents()) {
-            componente.setEnabled(false);
-        }
-
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowOpened(java.awt.event.WindowEvent e) {
-                nombre.requestFocusInWindow();
+            for (int i = 0; i < tiposCama.length; i++) {
+                if (i < num) {
+                    tiposCama[i].setEnabled(true);
+                } else {
+                    tiposCama[i].setEnabled(false);
+                    tiposCama[i].setSelectedIndex(0);
+                }
             }
         });
 
-        
-        
-        //\\ Mostrar la ventana //\\
-        setVisible(true);
+        // Restaurar borde cuando los spinners cambian//
+        fechaAlta.addChangeListener(e -> manejorErrorBordes(fechaAlta));
+        fechaFin.addChangeListener(e -> manejorErrorBordes(fechaFin));
+    }
+
+    // Añade un DocumentListener que limpia la marca de error al editar (IA) //
+    private void addClearErrorOnEdit(JTextField field) {
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { manejorErrorBordes(field); }
+            @Override public void removeUpdate(DocumentEvent e) { manejorErrorBordes(field); }
+            @Override public void changedUpdate(DocumentEvent e) { manejorErrorBordes(field); }
+        });
     }
     
-    // ======================================================= //
-    // MÉTODOS DE LÓGICA 						   //
-    // ======================================================= //
+    private void attachResumenListener(JTextField... campos) {
+        for (JTextField field : campos) {
+            field.getDocument().addDocumentListener(new DocumentListener() {
+                @Override public void insertUpdate(DocumentEvent e) { actualizarResumen(); }
+                @Override public void removeUpdate(DocumentEvent e) { actualizarResumen(); }
+                @Override public void changedUpdate(DocumentEvent e) { actualizarResumen(); }
+            });
+        }
+    }
     
-    private void calcularPrecio() {
-        double precio = 0.0;
+    private void attachResumenListener(JTextArea... areas) {
+        for (JTextArea area : areas) {
+            area.getDocument().addDocumentListener(new DocumentListener() {
+                @Override public void insertUpdate(DocumentEvent e) { actualizarResumen(); }
+                @Override public void removeUpdate(DocumentEvent e) { actualizarResumen(); }
+                @Override public void changedUpdate(DocumentEvent e) { actualizarResumen(); }
+            });
+        }
+    }
+
+    private void attachResumenListener(JSlider... sliders) {
+        for (JSlider slider : sliders) {
+            slider.addChangeListener(e -> actualizarResumen());
+        }
+    }
+
+    private void attachResumenListener(JSpinner... spinners) {
+        for (JSpinner spinner : spinners) {
+            spinner.addChangeListener(e -> actualizarResumen());
+        }
+    }
+
+    private void attachResumenListener(JCheckBox... checkboxes) {
+        for (JCheckBox cb : checkboxes) {
+            cb.addActionListener(e -> actualizarResumen());
+        }
+    }
+    
+    private void actualizarResumen() {
+        // ============================= //
+        // Resumen Arrendador			 //
+        // ============================= //
+        StringBuilder sbArr = new StringBuilder();
+        sbArr.append("Nombre: ").append(nombre.getText().trim()).append("\n");
+        sbArr.append("Apellidos: ").append(apellidos.getText().trim()).append("\n");
+        sbArr.append("DNI: ").append(dni.getText().trim()).append("\n");
+        sbArr.append("Teléfono: ").append(telefono.getText().trim()).append("\n");
+        sbArr.append("Dirección: ").append(direccion.getText().trim()).append("\n");
+        sbArr.append("Número de huéspedes: ").append(huespedes.getValue()).append("\n");
+        resumenArrendador.setText(sbArr.toString());
+
+        // ============================= //
+        // Resumen Inmueble 			 //
+        // ============================= //
         
-        // Sumar por baños (25€ cada uno) //
+        StringBuilder inmueble = new StringBuilder();
+        inmueble.append("Dormitorios: ").append(dormitorios.getValue()).append("\n");
+        inmueble.append("Baños: ").append(banios.getValue()).append("\n");
+        inmueble.append("Camas: ").append(camas.getValue()).append("\n");
+
+        for (int i = 0; i < (int)camas.getValue(); i++) {
+            inmueble.append("Cama ").append(i + 1).append(": ").append(tiposCama[i].getSelectedItem()).append("\n");
+        }
+
+        inmueble.append("Niños: ").append(ninios.isSelected() ? "Sí" : "No").append("\n");
+        if (ninios.isSelected()) {
+            inmueble.append("Extras: ").append(extras.getText().trim()).append("\n");
+        }
+
+        inmueble.append("Precio mínimo: ").append(precioMinimo.getText()).append("\n");
+        inmueble.append("Valoración: ").append(valoracion.getValue()).append(" / 10\n");
+
+        resumenInmueble.setText(inmueble.toString());
+    }
+    
+    private void recalcularPrecio() {
+        int precio = 0;
+
+        // 1. Precio por baños
         int numBanios = (int) banios.getValue();
         precio += numBanios * 25;
 
-        // Sumar por camas (Cama doble = 20€, Simple/Sofá = 15€) //
+        // 2. Precio por camas
         int numCamas = (int) camas.getValue();
         for (int i = 0; i < numCamas; i++) {
             String tipo = (String) tiposCama[i].getSelectedItem();
-            if ("Doble".equals(tipo)) precio += 20;
-            else precio += 15; // Simple o Sofá cama //
-        }
- 
-        // sumar extras niños (Cuna/Supletoria = 12€)  //
-        if (ninios.isSelected()) {
-            String textoExtra = extras.getText();
-            if (textoExtra.contains("Cuna") || textoExtra.contains("Cama supletoria")) {
-                precio += 12;
+
+            if ("Cama doble".equals(tipo)) {
+                precio += 20;
+            } else if ("Cama simple".equals(tipo)) {
+                precio += 15;
+            } else if ("Sofá cama".equals(tipo)) {
+                precio += 15;
             }
         }
-        
-        // Actualizar el campo de texto //
-        precioMinimo.setText(String.format("%.2f €", precio));
-    }
-    
-    
-    
-    private void validaciones(boolean isGuardar) {
-        boolean valido = true;
-        StringBuilder errores = new StringBuilder("Errores encontrados:\n");
 
-        // 1. Validar Nombre/Apellidos //
-        if (nombre.getText().trim().isEmpty()) {
-            nombre.setBorder(BORDE_ROJO); valido = false; errores.append("- Nombre obligatorio\n");
-        } else nombre.setBorder(BORDE_DEFECTO);
-
-        if (apellidos.getText().trim().isEmpty()) {
-            apellidos.setBorder(BORDE_ROJO); valido = false; errores.append("- Apellidos obligatorios\n");
-        } else apellidos.setBorder(BORDE_DEFECTO);
-
-        // 2. Validar DNI //
-        if (!dni.getText().matches("\\d{8}[A-Za-z]")) {
-            dni.setBorder(BORDE_ROJO); valido = false; errores.append("- DNI incorrecto (8 números + Letra)\n");
-        } else dni.setBorder(BORDE_DEFECTO);
-
-        // 3. Validar Teléfono //
-        if (!telefono.getText().matches("\\d{9}")) {
-            telefono.setBorder(BORDE_ROJO); valido = false; errores.append("- Teléfono incorrecto (9 dígitos)\n");
-        } else telefono.setBorder(BORDE_DEFECTO);
-
-        // 4. Validar Fecha Alta //
-        Date fechaElegida = (Date) fechaAlta.getValue();
-        Calendar hoy = Calendar.getInstance();
-        hoy.set(Calendar.HOUR_OF_DAY, 0); hoy.set(Calendar.MINUTE, 0); 
-        hoy.set(Calendar.SECOND, 0); hoy.set(Calendar.MILLISECOND, 0);
-        
-        JTextField fechaAltaField = ((JSpinner.DefaultEditor)fechaAlta.getEditor()).getTextField();
-        
-        if (fechaElegida.before(hoy.getTime())) {
-            fechaAltaField.setBorder(BORDE_ROJO);
-            valido = false; errores.append("- Fecha de alta no puede ser anterior a hoy\n");
-        } else {
-            fechaAltaField.setBorder(BORDE_DEFECTO);
+        // 3. Cuna / cama supletoria si hay niños
+        if (ninios.isSelected()) {
+            precio += 12;
         }
 
-        if (!valido) {
-            JOptionPane.showMessageDialog(this, errores.toString(), "Error de Validación", JOptionPane.ERROR_MESSAGE);
-        } else {
-            // Acción final tras pasar la validación //
-            if (isGuardar) {
-                JOptionPane.showMessageDialog(this, "Registro Guardado Correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            } 
-            // Si pasa la validación, siempre actualizamos la pestaña de resumen (útil para el botón Aceptar o para el FocusLost)
-            actualizar();
+        // 4. Mostrar precio final
+        precioMinimo.setText(precio + " €");
+    }
+    
+    private void rellenarExtrasPorEdad() {
+        if (!ninios.isSelected()) {
+            extras.setText("");
+            return;
         }
-        
+
+        int edad = (int) edadNinio.getValue();
+        if (edad >= 0 && edad <= 3) {
+            extras.setText("cuna");
+        } else if (edad >= 4 && edad <= 10) {
+            extras.setText("cama supletoria pequeña");
+        } else {
+            extras.setText("");
+        }
+
+        // Asegurar que precio y resumen reflejen el cambio
+        recalcularPrecio();
+        actualizarResumen();
     }
-    
-    
-    
-    private void actualizar() {
-        // Actualización de la pestaña de Resumen del Arrendador
-        resumenArrendador.setText(String.format(
-        "Nombre: %s\nApellidos: %s\nDNI: %s\nTeléfono: %s",
-        nombre.getText(), apellidos.getText(), dni.getText(), telefono.getText()));
-        
-        // Actualización de la pestaña de Resumen del Inmueble //
-        resumenInmueble.setText(String.format(
-        "Dirección: %s\nProvincia: %s\nNº Huéspedes: %d\nNº Dormitorios: %d\nNº Baños: %d\n\nPrecio Mínimo/Día: %s",
-        direccion.getText(), provincia.getSelectedItem(), huespedes.getValue(), 
-        dormitorios.getValue(), banios.getValue(), precioMinimo.getText()));
-        
-        panelResumen.setSelectedIndex(0); // Muestra la primera pestaña de resumen
-    }
-    
-    
-    
-    private void limpiar() {
-        // Campos de texto
-        nombre.setText(""); apellidos.setText(""); dni.setText(""); telefono.setText(""); direccion.setText("");
-        
-        // Spinners
-        fechaAlta.setValue(new Date()); fechaFin.setValue(new Date());
-        huespedes.setValue(1); dormitorios.setValue(1); banios.setValue(1); camas.setValue(1);
-        edadNinio.setValue(0);
-        
-        // Componentes especiales
-        provincia.setSelectedIndex(0);
+
+
+    // Limpia todos los campos del formulario y restaura bordes //
+    private void limpiarFormulario() {
+        nombre.setText("");
+        apellidos.setText("");
+        dni.setText("");
+        telefono.setText("");
+        direccion.setText("");
+        huespedes.setValue(1);
+        dormitorios.setValue(1);
+        banios.setValue(1);
+        camas.setValue(1);
+        precioMinimo.setText("40 €"); //La cama simple + el baño //
+        valoracion.setValue(5);
         ninios.setSelected(false);
         extras.setText("");
-        
-        // Limpiar el resumen //
-        resumenArrendador.setText("");
-        resumenInmueble.setText("");
-        
-        // Resetear bordes //
-        nombre.setBorder(BORDE_DEFECTO); 
-        apellidos.setBorder(BORDE_DEFECTO);
-        dni.setBorder(BORDE_DEFECTO); 
-        telefono.setBorder(BORDE_DEFECTO);
-        ((JSpinner.DefaultEditor)fechaAlta.getEditor()).getTextField().setBorder(BORDE_DEFECTO);
-        
-        // Recálculo y foco //
-        calcularPrecio();
-        nombre.requestFocus(); 
+        // restaurar propiedades originales en los componentes que registramos //
+        manejorErrorBordes(nombre);
+        manejorErrorBordes(apellidos);
+        manejorErrorBordes(dni);
+        manejorErrorBordes(telefono);
+        manejorErrorBordes(direccion);
+    }
+
+    // ======================================================= //
+    // MÉTODOS DE VALIDACIÓN                                   //
+    // ======================================================= //
+
+    // Valida el formulario de manera básica (puedes ampliar reglas)
+    private boolean validarFormulario() {
+        boolean valido = true;
+
+        // Limpiar errores previos en campos principales
+        manejorErrorBordes(nombre);
+        manejorErrorBordes(apellidos);
+        manejorErrorBordes(dni);
+        manejorErrorBordes(telefono);
+        manejorErrorBordes(direccion);
+
+        // Nombre
+        if (nombre.getText().trim().isEmpty()) {
+            mostrarError(nombre, "El nombre es obligatorio.");
+            valido = false;
+        }
+
+        // Apellidos
+        if (apellidos.getText().trim().isEmpty()) {
+            mostrarError(apellidos, "Los apellidos son obligatorios.");
+            valido = false;
+        }
+
+        // DNI (Uso expresiones regulares porque ya los he manejado el curso anterior) //
+        String dniText = dni.getText().trim();
+        if (dniText.isEmpty() || !dniText.matches("\\d{8}[A-Za-z]")) {
+            mostrarError(dni, "DNI inválido. Formato: 8 dígitos y letra, por ejemplo 12345678A");
+            valido = false;
+        }
+
+        // Teléfono de 9 digitos //
+        String tel = telefono.getText().trim();
+        if (!tel.matches("\\d{9}")) {  // debe ser exactamente 9 dígitos, nada más
+            mostrarError(telefono, "Teléfono inválido. Introduce exactamente 9 dígitos numéricos.");
+            valido = false;
+        }
+
+        // Dirección
+        if (direccion.getText().trim().isEmpty()) {
+            mostrarError(direccion, "La dirección es obligatoria.");
+            valido = false;
+        }
+
+        // Si hay error: mostrar mensaje resumen //
+        if (!valido) {
+            JOptionPane.showMessageDialog(this, "Hay errores en el formulario. Revisa los campos marcados en rojo.", "Errores de validación", JOptionPane.WARNING_MESSAGE);
+        }
+
+        return valido;
+    }
+
+    // ======================================================= //
+    // ACCELERATORS (ATAJOS)                                   //
+    // ======================================================= //
+
+    // Registra atajos de teclado (Ctrl+G, Ctrl+N, Ctrl + P, Ctrl+A, Ctrl+C) //
+    private void registrarAccelerators() {
+        JRootPane root = getRootPane();
+        InputMap im = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = root.getActionMap();
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_G, InputEvent.CTRL_DOWN_MASK), "guardar");
+        am.put("guardar", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { guardar.doClick(); }
+        });
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), "nuevo");
+        am.put("nuevo", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { nuevo.doClick(); }
+        });
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK), "imprimir");
+        am.put("imprimir", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { imprimir.doClick(); }
+        });
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), "aceptar");
+        am.put("aceptar", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { aceptar.doClick(); }
+        });
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), "cancelar");
+        am.put("cancelar", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { cancelar.doClick(); }
+        });
     }
 }
