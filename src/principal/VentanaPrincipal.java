@@ -11,7 +11,7 @@
 * Licencia:
 * [Todos los derechos reservados.]
 */
-package swing_c_p02_CsibiSebastian;
+package principal;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
