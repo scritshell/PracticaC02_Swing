@@ -1,0 +1,9 @@
+Carpeta destinada a documentos de apoyo y material de referencia del proyecto.
+
+Incluye:
+
+- Manual de usuario
+- Guías rápidas de uso
+- Referencias técnicas de interacción
+- Ejemplos de formularios y resúmenes automáticos de datos.
+- Instrucciones de validación y algunas reglas básicas
